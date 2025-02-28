@@ -3,3 +3,38 @@ title: "main"
 format: html
 ---
 
+```{r}
+library(readr)
+library(dplyr)
+NBA_Payroll_1990_2023 <- read_csv("NBA Payroll(1990-2023).csv")
+NBA_team_stats_2000_2023 = read_csv("nba_team_stats_00_to_23.csv")
+```
+
+```{r}
+head(NBA_Payroll_1990_2023)
+head(NBA_team_stats_2000_2023)
+```
+```{r}
+(payroll = summarize(NBA_Payroll_1990_2023,team,seasonStartYear,payroll,inflationAdjPayroll))
+(team_winrate = summarize(NBA_team_stats_2000_2023,Team,games_played,wins,losses,win_percentage,season))
+```
+
+```{r}
+team_winrate=mutate(team_winrate,season=substr(season,start=1,stop=4))
+names(payroll)[names(payroll) == 'seasonStartYear'] <- 'season'
+names(payroll)[names(payroll) == 'team'] <- 'Team'
+head(team_winrate)
+head(payroll)
+team_winrate$Team = gsub("New Orleans/Oklahoma City Hornets","New Orleans Hornets",team_winrate$Team)
+team_winrate$Team = gsub("Los Angeles","LA",team_winrate$Team)
+team_winrate$Team = gsub("(?!\\sClippers|\\sLakers)(\\s+\\w*$)","",team_winrate$Team,perl=T)
+team_winrate$Team = gsub(" Trail","",team_winrate$Team)
+#unique(team_winrate$Team)
+#gsup("New Orleans/Oklahoma City Hornets")
+payrollAndWinrate = merge(payroll,team_winrate,by=c("Team","season"))
+```
+
+```{r}
+filter(payrollAndWinrate,season==2003)
+```
+
