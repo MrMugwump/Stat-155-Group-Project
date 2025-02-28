@@ -38,3 +38,39 @@ payrollAndWinrate = merge(payroll,team_winrate,by=c("Team","season"))
 filter(payrollAndWinrate,season==2003)
 ```
 
+
+```{r}
+playerPPstats2021 = read_csv("player-per-possession-stats-2021-22.txt")
+playerTotals2021 = read_csv("player-total-stats-2021-22.txt")
+playerSalaries = read_csv("NBA Salaries(1990-2023).csv")
+head(playerSalaries)
+head(playerPPstats2021)
+nrow(playerPPstats2021)
+nrow(playerTotals2021)
+head(playerTotals2021)
+```
+```{r}
+unique(playerTotals2021$Pos)
+(rows= nrow(playerTotals2021))
+for (pos in unique(playerTotals2021$Pos)){
+  print(pos)
+  print(nrow(filter(playerTotals2021,Pos==pos))/rows)
+}
+```
+
+```{r}
+playerTotals2021%>%summarize(mean(`3PA`,na.rm=TRUE),mean(`2PA`,na.rm=TRUE),mean(FTA,na.rm=TRUE),mean(PTS,na.rm=TRUE),mean(`FT%`,na.rm=TRUE))
+
+playerTotals2021%>%summarize(sd(`3PA`,na.rm=TRUE),sd(`2PA`,na.rm=TRUE),sd(FTA,na.rm=TRUE),sd(PTS,na.rm=TRUE),sd(`FT%`,na.rm=TRUE))
+
+playerPPstats2021%>%summarize(mean(`eFG%`,na.rm=TRUE),mean(`FTA`,na.rm=TRUE),mean(PTS,na.rm=TRUE))
+
+playerPPstats2021%>%summarize(sd(`eFG%`,na.rm=TRUE),sd(`FTA`,na.rm=TRUE),sd(PTS,na.rm=TRUE))
+
+playerSalaries$salary = gsub("\\$|,","",playerSalaries$salary)
+head(playerSalaries)
+
+playerSalaries$salary <- as.integer(playerSalaries$salary)
+playerSalaries %>% filter(seasonStartYear==2021) %>% summarize(sd(salary))
+```
+
