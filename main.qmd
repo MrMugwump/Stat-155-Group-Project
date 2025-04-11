@@ -78,12 +78,31 @@ playerSalaries %>% filter(seasonStartYear==2021) %>% summarize(sd(salary))
 
 
 ```{r}
+# Points
 
-salariesAndTotals2021 <-
-  salariesAndTotals2021[!is.na(salariesAndTotals2021$salary), ]
+ggplot(data = salariesAndTotals2021, aes(x = PTS, y = salary)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
 
-salariesAndTotals2021 <-
-  salariesAndTotals2021[!is.na(salariesAndTotals2021$Player), ]
+# Total Rebounds
+
+ggplot(data = salariesAndTotals2021, aes(x = TRB, y = salary)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Assists
+
+ggplot(data = salariesAndTotals2021, aes(x = AST, y = salary)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+```
+
+```{r}
+
+# Plots Based On Positions
 
 # Points
 
