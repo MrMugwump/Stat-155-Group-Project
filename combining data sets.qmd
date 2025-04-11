@@ -35,3 +35,12 @@ salariesAndTotals2021 = distinct(merge(playerSalaries2021,norepeats,by=c("Player
 write.csv(salariesAndTotals2021,"salariesAndTotals2021.csv")
 ```
 
+```{r}
+head(salariesAndTotals2021)
+salariesAndTotals2021$salary = gsub("\\$|,","",salariesAndTotals2021$salary)
+salariesAndTotals2021$inflationAdjSalary = gsub("\\$|,","",salariesAndTotals2021$inflationAdjSalary)
+head(salariesAndTotals2021)
+
+write.csv(salariesAndTotals2021,"salariesAndTotals2021.csv")
+```
+
