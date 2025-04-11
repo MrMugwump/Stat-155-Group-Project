@@ -3,3 +3,35 @@ title: "combining data sets"
 format: html
 ---
 
+```{r}
+library(readr)
+library(dplyr)
+playerPPstats2021 = read_csv("player-per-possession-stats-2021-22.txt")
+playerTotals2021 = read_csv("player-total-stats-2021-22.txt")
+playerSalaries = read_csv("NBA Salaries(1990-2023).csv")
+```
+
+```{r}
+
+playerSalaries2021 = filter(playerSalaries, seasonStartYear==2021)
+playerSalaries2021 = playerSalaries2021 %>% rename(Player=playerName)
+head(playerSalaries2021)
+head(playerTotals2021)
+
+#merge(playerSalaries,playerTotals2021,by=c("playerName","Player"))
+head(distinct(merge(playerSalaries2021,playerTotals2021,by=c("Player"))))
+
+head(playerTotals2021$Team)
+unique(playerTotals2021$Team)
+
+multiTeams = playerTotals2021 %>% filter(!grepl("2TM|3TM|4TM",Team))
+
+repeated_names <- playerTotals2021$Player[duplicated(playerTotals2021$Player) | duplicated(playerTotals2021$Player, fromLast = TRUE)]
+print(repeated_names)
+norepeats <- playerTotals2021[!playerTotals2021$Player %in% repeated_names, ]
+head(norepeats)
+
+salariesAndTotals2021 = distinct(merge(playerSalaries2021,norepeats,by=c("Player")))
+write.csv(salariesAndTotals2021,"salariesAndTotals2021.csv")
+```
+
