@@ -4,10 +4,12 @@ format: html
 ---
 
 ```{r}
+library(ggplot2)
 library(readr)
 library(dplyr)
 NBA_Payroll_1990_2023 <- read_csv("NBA Payroll(1990-2023).csv")
 NBA_team_stats_2000_2023 = read_csv("nba_team_stats_00_to_23.csv")
+NBA_Salaries <- read_csv("nba_team_stats_00_to_23.csv")
 ```
 
 ```{r}
@@ -74,3 +76,9 @@ playerSalaries$salary <- as.integer(playerSalaries$salary)
 playerSalaries %>% filter(seasonStartYear==2021) %>% summarize(sd(salary))
 ```
 
+
+```{r}
+
+ggplot(data=NBA_team_stats_2000_2023, aes(x=points, y=))
+
+```
