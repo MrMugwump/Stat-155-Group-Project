@@ -44,3 +44,31 @@ head(salariesAndTotals2021)
 write.csv(salariesAndTotals2021,"salariesAndTotals2021.csv")
 ```
 
+```{r}
+predictor_vars <- c("PTS","TRB","AST")
+#combinations <- combn(predictor_vars, simplify = FALSE)
+all_combinations <- unlist(
+  lapply(1:length(predictor_vars), function(m) {
+    combn(predictor_vars, m, simplify = FALSE)
+  }),
+  recursive = FALSE
+)
+
+models <- lapply(all_combinations, function(vars) {
+  formula <- as.formula(paste("salary ~", paste(vars, collapse = " * ")))
+  lm(formula, data = salariesAndTotals2021)
+})
+
+max=0
+
+for (mdl in models) {
+  adjRSquared=summary(mdl)$adj.r.squared
+  if (adjRSquared>max){
+    max=adjRSquared
+    bestModel=mdl
+  }
+}
+
+summary(bestModel)
+```
+
