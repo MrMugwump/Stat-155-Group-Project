@@ -2,4 +2,32 @@
 title: "random"
 format: html
 ---
+```{r}
+library(readr)
+library(dplyr)
+salaries_totals_2021 <- read_csv("salariesAndTotals2021.csv")
 
+model1 <- lm(salary ~ PTS, data = salaries_totals_2021)
+summary(model1)
+
+model2 <- lm(salary ~ TRB, data = salaries_totals_2021)
+summary(model2)
+
+model3 <- lm(salary ~ AST, data = salaries_totals_2021)
+summary(model3)
+
+model4 <- lm(salary ~ PTS*TRB, data = salaries_totals_2021)
+summary(model4)
+
+model5 <- lm(salary ~ PTS*AST, data = salaries_totals_2021)
+summary(model5)
+
+model6 <- lm(salary ~ TRB*AST, data = salaries_totals_2021)
+summary(model6)
+
+
+#best fit
+model7 <- lm(salary ~ TRB*AST*PTS, data = salaries_totals_2021)
+summary(model7)
+
+```
