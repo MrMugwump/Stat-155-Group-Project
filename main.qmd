@@ -79,15 +79,71 @@ playerSalaries %>% filter(seasonStartYear==2021) %>% summarize(sd(salary))
 
 ```{r}
 
-head(salariesAndTotals2021)
-
 salariesAndTotals2021 <-
   salariesAndTotals2021[!is.na(salariesAndTotals2021$salary), ]
 
 salariesAndTotals2021 <-
   salariesAndTotals2021[!is.na(salariesAndTotals2021$Player), ]
 
+# Points
+
 ggplot(data = salariesAndTotals2021, aes(x = PTS, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Free Throws
+
+ggplot(data = salariesAndTotals2021, aes(x = FT, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Two Pointers
+
+ggplot(data = salariesAndTotals2021, aes(x = `2P`, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Effective Field Goal Percentage
+
+ggplot(data = salariesAndTotals2021, aes(x = `eFG%`, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Free Throw Percentage
+
+ggplot(data = salariesAndTotals2021, aes(x = `FT%`, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Assists
+
+ggplot(data = salariesAndTotals2021, aes(x = AST, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Total Rebounds
+
+ggplot(data = salariesAndTotals2021, aes(x = TRB, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Steals
+
+ggplot(data = salariesAndTotals2021, aes(x = STL, y = salary, color = Pos)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Blocks
+
+ggplot(data = salariesAndTotals2021, aes(x = BLK, y = salary, color = Pos)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = 'lm', se = FALSE) +
   theme_minimal()
