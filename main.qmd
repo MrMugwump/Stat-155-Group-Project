@@ -98,6 +98,30 @@ ggplot(data = salariesAndTotals2021, aes(x = AST, y = salary)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = 'lm', se = FALSE) +
   theme_minimal()
+
+
+# Points and Rebounds
+
+ggplot(data = salariesAndTotals2021, aes(x = PTS, y = salary, color = TRB)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+
+# Points and Assists
+
+ggplot(data = salariesAndTotals2021, aes(x = PTS, y = salary, color = AST)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
+# Rebounds and Assists
+
+ggplot(data = salariesAndTotals2021, aes(x = TRB, y = salary, color = AST)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_minimal()
+
 ```
 
 ```{r}
