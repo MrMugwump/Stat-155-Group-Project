@@ -1,5 +1,5 @@
 ---
-title: "random"
+title: "LinearRegressionModels"
 format: html
 ---
 ```{r}
@@ -24,7 +24,6 @@ summary(model5)
 
 model6 <- lm(salary ~ TRB*AST, data = salaries_totals_2021)
 summary(model6)
-
 
 #best fit
 model7 <- lm(salary ~ TRB*AST*PTS, data = salaries_totals_2021)
