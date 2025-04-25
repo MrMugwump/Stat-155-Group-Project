@@ -1,0 +1,22 @@
+---
+title: "testBen"
+format: html
+---
+
+```{r}
+salariesAndTotals2021 = read_csv("salariesAndTotals2021.csv")
+```
+
+```{r}
+xAxisLabels = c("Points","Total Rebounds","Assists")
+relevantCols=c("PTS","TRB","AST")
+for (i in 1:length(relevantCols)){
+  p=ggplot(data=salariesAndTotals2021,aes_string(x=relevantCols[i],y="salary")) +
+    geom_point(alpha = 0.7) +
+    geom_smooth(method = 'lm', se = FALSE) +
+    theme_minimal()+
+      xlab(xAxisLabels[i])+ylab("Salary")
+  print(p)
+}
+```
+
