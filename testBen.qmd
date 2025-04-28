@@ -19,4 +19,153 @@ for (i in 1:length(relevantCols)){
   print(p)
 }
 ```
+```{r}
+install.packages("coro")
+install.packages("partitions")
+library(coro,partitions)
+```
+
+
+```{r}
+appendSubsets = function(parentSet,currSets,setSize){
+  sets = cbind()
+  for (i in 1:length(currSets[1,])){
+    subset = currSets[,i]
+    remainingSet = setdiff(parentSet,subset)
+    #print(remainingSet)
+    remainingSetCombos  = combn(remainingSet,setSize,simplify = TRUE)
+    for (j in 1:length(remainingSetCombos[1,])){
+      newSubset = remainingSetCombos[,j]
+      sets = cbind(sets,append(subset,newSubset))
+    }
+  }
+  return(sets)
+}
+
+getPartitions = function(originalSet, partition){ # Think about adding redundancy if 
+  sets = combn(originalSet,partition[1],simplify=TRUE)
+  #print(sets)
+  if(length(partition)==1){
+    return(sets)
+  }
+  for (i in 2:length(partition)){
+    if(partition[i]==0){
+      return(sets)
+    }
+    if(partition[i]==1){ # makes it not make duplicates for specifically the 1s left over.
+      newSets = cbind()
+      for (j in 1:length(sets[1,])){
+        newSets = cbind(newSets,append(sets[,j],setdiff(originalSet,sets[,j])))
+      }
+      return(newSets)
+    }
+    sets = appendSubsets(originalSet,sets,partition[i])
+    
+    #print(sets)
+  }
+  return(sets)
+}
+
+turnIntoStrings = function(headerString,partition, setPartitions){
+  strings = cbind()
+  for (i in 1:length(setPartitions[1,])){
+    currString = ""
+    currPartition = setPartitions[,i]
+    index = 1
+    for (j in partition){
+      if(j!=0){
+        concatenatedSubset = paste(currPartition[index:(index+j-1)],collapse = "*")
+        if (currString==""){
+          currString = paste(c(headerString,concatenatedSubset),collapse="")
+        }
+        else{
+          currString = paste(c(currString,concatenatedSubset),collapse="+")
+        }
+        index=index+j
+      }
+    }
+    strings = cbind(strings,currString)
+  }
+  return(strings)
+}
+```
+
+```{r}
+currSet = c("PTS","TRB","AST","STL","POS")
+partitions=parts(length(currSet))
+for (i in 1:length(partitions[1,])){
+  prt = partitions[,i]
+  print(prt)
+  partitionedSets = getPartitions(currSet,prt)
+  print(partitionedSets)
+  print(turnIntoStrings("Salary~",prt,partitionedSets))
+  print("_____________")
+}
+```
+
+
+```{r}
+parts(10)
+currSet = c("a","b","c","d")
+setdiff(currSet,c("a","b"))
+
+
+getPartitions = function(partition,yourSet){
+  combos = combn(yourSet,partition[1],simplify = FALSE)
+  if(partition[1]==length(yourSet)){
+    return(combos)
+  }
+  for (subset in combos){
+       remainingSet = setdiff(yourSet,subset) # Gets the remaining sets for each of those largest groups
+       # need to get the set of all combinations for the next step in the partitions, and then append 
+  }
+  for (i in 2:length(partition)){
+    
+    # Gets all of the combinations for the largest group
+    
+    for (subset in combos){
+       remainingSet = setdiff(yourSet,subset) # Gets the remaining sets for each of those largest groups
+       # need to get the set of all combinations for the next step in the partitions, and then append 
+    }
+  }
+}
+```
+
+
+```{r}
+
+subGenerator = function(n){
+  arr = c(n)
+  currArr = arr
+  for (i in 2:n-1){
+    currNum = n-i
+    currArr = c(n-i,i)
+    
+    
+    if (currNum<i){ #stops from generating redundant partitions
+      return(currArr)
+    }
+    
+    # Yields (n-i,i),(n-i,i-k,k),(n-i,i-k,k-j,j)...
+  }
+}
+partition = generator(function(n){
+  arr = c(n)
+  currArr = arr
+  for (i in 2:n-1){
+    currNum = n-i
+    currArr = c(n-i,i)
+    
+    
+    if (currNum<i){ #stops from generating redundant partitions
+      return()
+    }
+    yield(currArr)
+    
+  }
+})
+
+gen = partition(5)
+gen()
+```
 
