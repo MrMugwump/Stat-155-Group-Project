@@ -22,7 +22,8 @@ for (i in 1:length(relevantCols)){
 ```{r}
 install.packages("coro")
 install.packages("partitions")
-library(coro,partitions)
+library(coro)
+library(partitions)
 ```
 
 
