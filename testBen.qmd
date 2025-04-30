@@ -24,6 +24,8 @@ install.packages("coro")
 install.packages("partitions")
 library(coro)
 library(partitions)
+library(readr)
+library(ggplot2)
 ```
 
 
@@ -92,16 +94,19 @@ turnIntoStrings = function(headerString,partition, setPartitions){
 ```
 
 ```{r}
-currSet = c("PTS","TRB","AST","STL","POS")
+currSet = c("PTS","TRB","AST","STL")
 partitions=parts(length(currSet))
 for (i in 1:length(partitions[1,])){
   prt = partitions[,i]
   print(prt)
   partitionedSets = getPartitions(currSet,prt)
   print(partitionedSets)
-  print(turnIntoStrings("Salary~",prt,partitionedSets))
+  example <- turnIntoStrings("Salary~",prt,partitionedSets)
   print("_____________")
 }
+
+
+
 ```
 
 
