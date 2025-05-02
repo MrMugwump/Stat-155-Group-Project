@@ -27,6 +27,7 @@ library(coro)
 library(partitions)
 library(readr)
 library(ggplot2)
+library(dplyr)
 ```
 
 
@@ -95,7 +96,7 @@ turnIntoStrings = function(headerString,partition, setPartitions){
 
 # Blocks, Effective Field Goal Percentage, Age, and Position
 
-currSet = c("PTS","TRB","AST","STL", )
+currSet = c("PTS","TRB","AST","STL", "BLK", "`eFG%`", "Pos", "Age")
 partitions=parts(length(currSet))
 for (i in 1:length(partitions[1,])){
   prt = partitions[,i]
@@ -105,8 +106,6 @@ for (i in 1:length(partitions[1,])){
   example <- turnIntoStrings("Salary~",prt,partitionedSets)
   print("_____________")
 }
-
-
 
 ```
 
@@ -202,7 +201,7 @@ turnIntoStrings = function(headerString, partition, setPartitions) {
 ```{r}
 
 # Define the set of variables to include in the model search
-currSet <- c("PTS", "TRB", "AST", "STL")  # You can reduce this to 3 if needed
+currSet = c("PTS","TRB","AST","STL", "BLK", "`eFG%`", "Pos", "Age")
 
 # Generate all integer partitions of the variable set (e.g., (2,1,1), (4), etc.)
 partitions <- parts(length(currSet))
@@ -252,20 +251,15 @@ top5
 ```
 
 ```{r}
-# Model 1: Full 4-way interaction
-model1 <- lm(salary ~ PTS * TRB * AST * STL, data = salariesAndTotals2021)
+model1 <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age+`eFG%`, data = salariesAndTotals2021)
 
-# Model 2: 3-way interaction (PTS, TRB, AST) plus STL as additive term
-model2 <- lm(salary ~ PTS * TRB * AST + STL, data = salariesAndTotals2021)
+model2 <- lm(salary ~ PTS*TRB*AST*BLK*`eFG%`*Pos*Age+STL, data = salariesAndTotals2021)
 
-# Model 3: Two 2-way interactions: (TRB * STL) and (PTS * AST)
-model3 <- lm(salary ~ TRB * STL + PTS * AST, data = salariesAndTotals2021)
+model3 <- lm(salary ~ PTS*AST*STL*BLK*`eFG%`*Pos*Age+TRB, data = salariesAndTotals2021)
 
-# Model 4: 3-way interaction (PTS, AST, STL) plus TRB as additive term
-model4 <- lm(salary ~ PTS * AST * STL + TRB, data = salariesAndTotals2021)
+model4 <- lm(salary ~ TRB*AST*STL*BLK*`eFG%`*Pos*Age+PTS, data = salariesAndTotals2021)
 
-# Model 5: 3-way interaction (PTS TRB STL) plus AST as additive term
-model4 <- lm(salary ~ PTS * TRB * STL + AST, data = salariesAndTotals2021)
+model4 <- lm(salary ~ PTS*TRB*STL*BLK*`eFG%`*Pos*Age+AST, data = salariesAndTotals2021)
 
 summary(model1)
 summary(model2)
@@ -276,20 +270,15 @@ summary(model5)
 
 ```{r}
 
-# Model 1: Full 4-way interaction
-model1 <- lm(salary ~ PTS * TRB * AST * STL, data = salariesAndTotals2021)
+model1 <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age+`eFG%`, data = salariesAndTotals2021)
 
-# Model 2: 3-way interaction (PTS, TRB, AST) plus STL as additive term
-model2 <- lm(salary ~ PTS * TRB * AST + STL, data = salariesAndTotals2021)
+model2 <- lm(salary ~ PTS*TRB*AST*BLK*`eFG%`*Pos*Age+STL, data = salariesAndTotals2021)
 
-# Model 3: Two 2-way interactions: (TRB * STL) and (PTS * AST)
-model3 <- lm(salary ~ TRB * STL + PTS * AST, data = salariesAndTotals2021)
+model3 <- lm(salary ~ PTS*AST*STL*BLK*`eFG%`*Pos*Age+TRB, data = salariesAndTotals2021)
 
-# Model 4: 3-way interaction (PTS, AST, STL) plus TRB as additive term
-model4 <- lm(salary ~ PTS * AST * STL + TRB, data = salariesAndTotals2021)
+model4 <- lm(salary ~ TRB*AST*STL*BLK*`eFG%`*Pos*Age+PTS, data = salariesAndTotals2021)
 
-# Model 5: 3-way interaction (PTS TRB STL) plus AST as additive term
-model4 <- lm(salary ~ PTS * TRB * STL + AST, data = salariesAndTotals2021)
+model4 <- lm(salary ~ PTS*TRB*STL*BLK*`eFG%`*Pos*Age+AST, data = salariesAndTotals2021)
 
 for (i in 1:5) {
     model <- get(paste0("model", i))
