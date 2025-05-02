@@ -1,0 +1,272 @@
+
+---
+title: "testBen"
+format: html
+---
+
+```{r}
+salariesAndTotals2021 = read_csv("salariesAndTotals2021.csv")
+```
+
+```{r}
+xAxisLabels = c("Points","Total Rebounds","Assists")
+relevantCols=c("PTS","TRB","AST")
+for (i in 1:length(relevantCols)){
+  p=ggplot(data=salariesAndTotals2021,aes_string(x=relevantCols[i],y="salary")) +
+    geom_point(alpha = 0.7) +
+    geom_smooth(method = 'lm', se = FALSE) +
+    theme_minimal()+
+      xlab(xAxisLabels[i])+ylab("Salary")
+  print(p)
+}
+```
+```{r}
+install.packages("coro")
+install.packages("partitions")
+library(coro)
+library(partitions)
+library(readr)
+library(ggplot2)
+```
+
+
+```{r}
+appendSubsets = function(parentSet,currSets,setSize){
+  sets = cbind()
+  for (i in 1:length(currSets[1,])){
+    subset = currSets[,i]
+    remainingSet = setdiff(parentSet,subset)
+    remainingSetCombos  = combn(remainingSet,setSize,simplify = TRUE)
+    for (j in 1:length(remainingSetCombos[1,])){
+      newSubset = remainingSetCombos[,j]
+      sets = cbind(sets,append(subset,newSubset))
+    }
+  }
+  return(sets)
+}
+
+getPartitions = function(originalSet, partition){ # Think about adding redundancy if 
+  sets = combn(originalSet,partition[1],simplify=TRUE)
+  if(length(partition)==1){
+    return(sets)
+  }
+  for (i in 2:length(partition)){
+    if(partition[i]==0){
+      return(sets)
+    }
+    if(partition[i]==1){ # makes it not make duplicates for specifically the 1s left over.
+      newSets = cbind()
+      for (j in 1:length(sets[1,])){
+        newSets = cbind(newSets,append(sets[,j],setdiff(originalSet,sets[,j])))
+      }
+      return(newSets)
+    }
+    sets = appendSubsets(originalSet,sets,partition[i])
+
+  }
+  return(sets)
+}
+
+turnIntoStrings = function(headerString,partition, setPartitions){
+  strings = cbind()
+  for (i in 1:length(setPartitions[1,])){
+    currString = ""
+    currPartition = setPartitions[,i]
+    index = 1
+    for (j in partition){
+      if(j!=0){
+        concatenatedSubset = paste(currPartition[index:(index+j-1)],collapse = "*")
+        if (currString==""){
+          currString = paste(c(headerString,concatenatedSubset),collapse="")
+        }
+        else{
+          currString = paste(c(currString,concatenatedSubset),collapse="+")
+        }
+        index=index+j
+      }
+    }
+    strings = cbind(strings,currString)
+  }
+  return(strings)
+}
+```
+
+```{r}
+currSet = c("PTS","TRB","AST","STL")
+partitions=parts(length(currSet))
+for (i in 1:length(partitions[1,])){
+  prt = partitions[,i]
+  print(prt)
+  partitionedSets = getPartitions(currSet,prt)
+  print(partitionedSets)
+  example <- turnIntoStrings("Salary~",prt,partitionedSets)
+  print("_____________")
+}
+
+
+
+```
+
+
+```{r}
+# Function to append additional groupings to existing subsets during partition expansion
+appendSubsets = function(parentSet, currSets, setSize) {
+  # Initialize matrix to store results
+  sets = cbind()
+  
+  # Loop through current subset columns
+  for (i in 1:ncol(currSets)) {
+    # Extract current subset
+    subset = currSets[, i]
+    
+    # Find remaining elements not yet included
+    remainingSet = setdiff(parentSet, subset)
+    
+    # Get all combinations of the remaining set with specified group size
+    remainingCombos = combn(remainingSet, setSize, simplify = TRUE)
+    
+    # Append each new subset to the result matrix
+    for (j in 1:ncol(remainingCombos)) {
+      newSubset = remainingCombos[, j]
+      sets = cbind(sets, append(subset, newSubset))
+    }
+  }
+  return(sets)
+}
+
+# Function to apply a partition pattern to a set of variables
+getPartitions = function(originalSet, partition) {
+  # Start with the first group size from partition
+  sets = combn(originalSet, partition[1], simplify = TRUE)
+  
+  # If only one group, return early
+  if (length(partition) == 1) return(sets)
+
+  # Loop through remaining group sizes in the partition
+  for (i in 2:length(partition)) {
+    if (partition[i] == 0) return(sets)  # skip if zero group size
+    
+    if (partition[i] == 1) {
+      # Add the one remaining variable in each case
+      newSets = cbind()
+      for (j in 1:ncol(sets)) {
+        newSets = cbind(newSets, append(sets[, j], setdiff(originalSet, sets[, j])))
+      }
+      return(newSets)
+    }
+
+    # For group sizes >= 2, expand the set with appendSubsets
+    sets = appendSubsets(originalSet, sets, partition[i])
+  }
+  return(sets)
+}
+
+# Function to turn a partitioned set into a model formula string (e.g., salary ~ PTS*TRB + AST)
+turnIntoStrings = function(headerString, partition, setPartitions) {
+  # Initialize result matrix
+  strings = cbind()
+  
+  # Loop through each partitioned column
+  for (i in 1:ncol(setPartitions)) {
+    currString = ""                  # holds the formula string
+    currPartition = setPartitions[, i]  # current group of variables
+    index = 1                        # index to track variable positions
+    
+    # Loop through each group size in the partition
+    for (j in partition) {
+      if (j != 0) {
+        # Extract variables in this group
+        subset = currPartition[index:(index + j - 1)]
+        
+        # Join variables with * to indicate interaction
+        term = paste(subset, collapse = "*")
+        
+        # Build the formula string
+        currString = ifelse(currString == "", 
+                            paste0(headerString, term), 
+                            paste(currString, term, sep = "+"))
+        index = index + j
+      }
+    }
+    strings = cbind(strings, currString)
+  }
+  return(strings)
+}
+
+```
+
+
+```{r}
+
+# Define the set of variables to include in the model search
+currSet <- c("PTS", "TRB", "AST", "STL")  # You can reduce this to 3 if needed
+
+# Generate all integer partitions of the variable set (e.g., (2,1,1), (4), etc.)
+partitions <- parts(length(currSet))
+
+# Create a dataframe to store the model formulas and their adjusted R² values
+results <- data.frame(
+  formula = character(),  # store formula strings
+  adj_r2 = numeric(),     # store adjusted R-squared values
+  stringsAsFactors = FALSE
+)
+
+# Loop through each partition structure
+for (i in 1:ncol(partitions)) {
+  # Extract the i-th partition structure (e.g., c(2,2) or c(3,1))
+  prt <- partitions[, i]
+
+  # Get all valid variable groupings based on the current partition
+  partitionedSets <- getPartitions(currSet, prt)
+
+  # Generate formula strings from each grouping
+  formulas <- turnIntoStrings("salary~", prt, partitionedSets)
+
+  # Loop through each generated formula
+  for (j in 1:ncol(formulas)) {
+    # Extract the j-th formula string
+    f_str <- formulas[1, j]
+
+    # Fit the linear model safely (skip if model fitting fails)
+    model <- tryCatch({
+      lm(as.formula(f_str), data = salariesAndTotals2021)
+    }, error = function(e) NULL)
+
+    # If model was successfully fit, store the adjusted R² and formula
+    if (!is.null(model)) {
+      adj_r2 <- summary(model)$adj.r.squared
+      results <- rbind(results, data.frame(formula = f_str, adj_r2 = adj_r2))
+    }
+  }
+}
+
+
+```
+
+```{r}
+top5 <- results %>% arrange(desc(adj_r2)) %>% head(5)
+top5
+```
+```{r}
+# Model 1: Full 4-way interaction
+model1 <- lm(salary ~ PTS * TRB * AST * STL, data = salariesAndTotals2021)
+
+# Model 2: 3-way interaction (PTS, TRB, AST) plus STL as additive term
+model2 <- lm(salary ~ PTS * TRB * AST + STL, data = salariesAndTotals2021)
+
+# Model 3: Two 2-way interactions: (TRB * STL) and (PTS * AST)
+model3 <- lm(salary ~ TRB * STL + PTS * AST, data = salariesAndTotals2021)
+
+# Model 4: Two 2-way interactions: (PTS * AST) and (TRB * STL)
+model4 <- lm(salary ~ PTS * AST + TRB * STL, data = salariesAndTotals2021)
+
+# Model 5: 3-way interaction (PTS, AST, STL) plus TRB as additive term
+model5 <- lm(salary ~ PTS * AST * STL + TRB, data = salariesAndTotals2021)
+
+summary(model1)
+summary(model2)
+summary(model3)
+summary(model4)
+summary(model5)
+```
+
