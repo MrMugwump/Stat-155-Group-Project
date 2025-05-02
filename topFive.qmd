@@ -92,7 +92,10 @@ turnIntoStrings = function(headerString,partition, setPartitions){
 ```
 
 ```{r}
-currSet = c("PTS","TRB","AST","STL")
+
+# Blocks, Effective Field Goal Percentage, Age, and Position
+
+currSet = c("PTS","TRB","AST","STL", )
 partitions=parts(length(currSet))
 for (i in 1:length(partitions[1,])){
   prt = partitions[,i]
@@ -244,9 +247,10 @@ for (i in 1:ncol(partitions)) {
 ```
 
 ```{r}
-top5 <- results %>% arrange(desc(adj_r2)) %>% head(5)
+top5 <- results %>% arrange(desc(adj_r2)) %>% head(6)
 top5
 ```
+
 ```{r}
 # Model 1: Full 4-way interaction
 model1 <- lm(salary ~ PTS * TRB * AST * STL, data = salariesAndTotals2021)
@@ -257,16 +261,47 @@ model2 <- lm(salary ~ PTS * TRB * AST + STL, data = salariesAndTotals2021)
 # Model 3: Two 2-way interactions: (TRB * STL) and (PTS * AST)
 model3 <- lm(salary ~ TRB * STL + PTS * AST, data = salariesAndTotals2021)
 
-# Model 4: Two 2-way interactions: (PTS * AST) and (TRB * STL)
-model4 <- lm(salary ~ PTS * AST + TRB * STL, data = salariesAndTotals2021)
+# Model 4: 3-way interaction (PTS, AST, STL) plus TRB as additive term
+model4 <- lm(salary ~ PTS * AST * STL + TRB, data = salariesAndTotals2021)
 
-# Model 5: 3-way interaction (PTS, AST, STL) plus TRB as additive term
-model5 <- lm(salary ~ PTS * AST * STL + TRB, data = salariesAndTotals2021)
+# Model 5: 3-way interaction (PTS TRB STL) plus AST as additive term
+model4 <- lm(salary ~ PTS * TRB * STL + AST, data = salariesAndTotals2021)
 
 summary(model1)
 summary(model2)
 summary(model3)
 summary(model4)
 summary(model5)
+```
+
+```{r}
+
+# Model 1: Full 4-way interaction
+model1 <- lm(salary ~ PTS * TRB * AST * STL, data = salariesAndTotals2021)
+
+# Model 2: 3-way interaction (PTS, TRB, AST) plus STL as additive term
+model2 <- lm(salary ~ PTS * TRB * AST + STL, data = salariesAndTotals2021)
+
+# Model 3: Two 2-way interactions: (TRB * STL) and (PTS * AST)
+model3 <- lm(salary ~ TRB * STL + PTS * AST, data = salariesAndTotals2021)
+
+# Model 4: 3-way interaction (PTS, AST, STL) plus TRB as additive term
+model4 <- lm(salary ~ PTS * AST * STL + TRB, data = salariesAndTotals2021)
+
+# Model 5: 3-way interaction (PTS TRB STL) plus AST as additive term
+model4 <- lm(salary ~ PTS * TRB * STL + AST, data = salariesAndTotals2021)
+
+for (i in 1:5) {
+    model <- get(paste0("model", i))
+  
+    plot <- ggplot(model, aes(x = .fitted, y = .resid)) + 
+      geom_point() + 
+      geom_hline(yintercept = 0) +
+      geom_smooth(se = FALSE) +
+      labs(x = "Fitted", y = "Residual", title = paste("Model",i))
+    
+    print(plot)
+}
+
 ```
 
