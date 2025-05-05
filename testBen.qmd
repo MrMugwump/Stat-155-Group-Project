@@ -4,6 +4,14 @@ format: html
 ---
 
 ```{r}
+library(coro)
+library(partitions)
+library(readr)
+library(ggplot2)
+library(dplyr)
+```
+
+```{r}
 salariesAndTotals2021 = read_csv("salariesAndTotals2021.csv")
 ```
 
@@ -19,12 +27,7 @@ for (i in 1:length(relevantCols)){
   print(p)
 }
 ```
-```{r}
-library(coro)
-library(partitions)
-library(readr)
-library(ggplot2)
-```
+
 
 
 ```{r}
@@ -47,7 +50,7 @@ getPartitions = function(originalSet, partition){ # Think about adding redundanc
   sets = combn(originalSet,partition[1],simplify=TRUE)
   #print(sets)
   if(length(partition)==1){
-    return(sets)
+    return(cbind(sets))
   }
   for (i in 2:length(partition)){
     if(partition[i]==0){
@@ -92,7 +95,10 @@ turnIntoStrings = function(headerString,partition, setPartitions){
 ```
 
 ```{r}
+
 currSet = c("PTS","TRB","AST","STL")
+testSet = cbind(c("PTS"))
+testSet[1,]
 partitions=parts(length(currSet))
 for (i in 1:length(partitions[1,])){
   prt = partitions[,i]
@@ -102,8 +108,6 @@ for (i in 1:length(partitions[1,])){
   example <- turnIntoStrings("Salary~",prt,partitionedSets)
   print("_____________")
 }
-
-
 
 ```
 
@@ -135,41 +139,48 @@ getPartitions = function(partition,yourSet){
 }
 ```
 
-
 ```{r}
+currSet = c("PTS","TRB","AST","STL", "BLK", "`eFG%`", "Pos", "Age")
 
-subGenerator = function(n){
-  arr = c(n)
-  currArr = arr
-  for (i in 2:n-1){
-    currNum = n-i
-    currArr = c(n-i,i)
+all_combinations <- unlist( # Generates every subset of currSet
+  lapply(1:length(currSet), function(m) {
+    combn(currSet, m, simplify = FALSE)
+  }),
+  recursive = FALSE
+)
+
+# Create a dataframe to store the model formulas and their adjusted R squared values
+modelEvals <- data.frame(
+  formulaString = character(),  # store formula strings
+  adj_r2 = numeric(),# store adjusted R-squared values
+  stringsAsFactors = FALSE
+)
+
+for (combo in all_combinations){ # combo is a subset of currSet
+  #print(combo)
+  partitions=parts(length(combo)) # Gets all the partitions for the current subset
+  
+  for (i in 1:length(partitions[1,])){
+    prt = partitions[,i]
+    partitionedSets = getPartitions(combo,prt) 
+    formulas = turnIntoStrings("salary~",prt,partitionedSets) 
     
-    
-    if (currNum<i){ #stops from generating redundant partitions
-      return(currArr)
+    for (frmla in formulas){
+      model = lm(as.formula(frmla),data = salariesAndTotals2021)
+      adj_r2= summary(model)$adj.r.squared
+      modelEvals = rbind(modelEvals, data.frame(formulaString = frmla, adj_r2 = adj_r2)) # Stores the formula and the R squared value
+      #print(modelEvals)
+
     }
-    
-    # Yields (n-i,i),(n-i,i-k,k),(n-i,i-k,k-j,j)...
   }
 }
-partition = generator(function(n){
-  arr = c(n)
-  currArr = arr
-  for (i in 2:n-1){
-    currNum = n-i
-    currArr = c(n-i,i)
-    
-    
-    if (currNum<i){ #stops from generating redundant partitions
-      return()
-    }
-    yield(currArr)
-    
-  }
-})
+```
 
-gen = partition(5)
-gen()
+```{r}
+top5 = modelEvals %>% arrange(desc(adj_r2))
+
+head(top5)
+
+write.csv(modelEvals,"modelEvals.csv")
 ```
 
