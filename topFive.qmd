@@ -6,6 +6,7 @@ format: html
 
 ```{r}
 salariesAndTotals2021 = read_csv("salariesAndTotals2021.csv")
+modelEvals = read_csv("modelEvals.csv")
 ```
 
 ```{r}
@@ -251,7 +252,7 @@ top5
 ```
 
 ```{r}
-model1 <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age+`eFG%`, data = salariesAndTotals2021)
+model1 <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age, data = salariesAndTotals2021)
 
 model2 <- lm(salary ~ PTS*TRB*AST*BLK*`eFG%`*Pos*Age+STL, data = salariesAndTotals2021)
 
@@ -294,3 +295,126 @@ for (i in 1:5) {
 
 ```
 
+```{r}
+
+model1 <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age, data = salariesAndTotals2021)
+
+model2 <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age+`eFG%`, data = salariesAndTotals2021)
+
+model3 <- lm(salary ~ PTS*TRB*AST*BLK* `eFG%` *Pos*Age, data = salariesAndTotals2021)
+
+model4 <- lm(salary ~ PTS*TRB*AST*BLK*`eFG%`*Pos*Age+STL, data = salariesAndTotals2021)
+
+model5 <- lm(salary ~ PTS*AST*STL*BLK*`eFG%`*Pos*Age+TRB, data = salariesAndTotals2021)
+
+# Model 1 Plot
+plot1 <- ggplot(model1, aes(x = .fitted, y = .resid)) +  
+  geom_point() +  
+  geom_hline(yintercept = 0) +  
+  geom_smooth(se = FALSE) +  
+  labs(
+    x = "Fitted", y = "Residual",
+    title = "Model 1: Full Interaction (PTS × TRB × AST × STL × BLK × Pos × Age)",
+    caption = "Residuals vs. Fitted values for full 7-variable interaction model"
+  )
+
+ggsave(
+  filename = "model1_residual_plot.png",
+  plot = plot1,
+  width = 6, height = 4, dpi = 300
+)
+
+# Model 2 Plot
+plot2 <- ggplot(model2, aes(x = .fitted, y = .resid)) +  
+  geom_point() +  
+  geom_hline(yintercept = 0) +  
+  geom_smooth(se = FALSE) +  
+  labs(
+    x = "Fitted", y = "Residual",
+    title = "Model 2: Full Interaction + Additive eFG%",
+    caption = "Residuals vs. Fitted values with eFG% added additively"
+  )
+
+ggsave(
+  filename = "model2_residual_plot.png",
+  plot = plot2,
+  width = 6, height = 4, dpi = 300
+)
+
+# Model 3 Plot
+plot3 <- ggplot(model3, aes(x = .fitted, y = .resid)) +  
+  geom_point() +  
+  geom_hline(yintercept = 0) +  
+  geom_smooth(se = FALSE) +  
+  labs(
+    x = "Fitted", y = "Residual",
+    title = "Model 3: Full Interaction w/o STL",
+    caption = "Residuals vs. Fitted values without STL in interaction"
+  )
+
+ggsave(
+  filename = "model3_residual_plot.png",
+  plot = plot3,
+  width = 6, height = 4, dpi = 300
+)
+
+# Model 4 Plot
+plot4 <- ggplot(model4, aes(x = .fitted, y = .resid)) +  
+  geom_point() +  
+  geom_hline(yintercept = 0) +  
+  geom_smooth(se = FALSE) +  
+  labs(
+    x = "Fitted", y = "Residual",
+    title = "Model 4: STL in Interaction, TRB Additive",
+    caption = "Residuals vs. Fitted values with TRB added outside interaction"
+  )
+
+ggsave(
+  filename = "model4_residual_plot.png",
+  plot = plot4,
+  width = 6, height = 4, dpi = 300
+)
+
+# Model 5 Plot
+plot5 <- ggplot(model5, aes(x = .fitted, y = .resid)) +  
+  geom_point() +  
+  geom_hline(yintercept = 0) +  
+  geom_smooth(se = FALSE) +  
+  labs(
+    x = "Fitted", y = "Residual",
+    title = "Model 5: TRB + Full 6-Way Interaction",
+    caption = "Residuals vs. Fitted values with TRB added to 6-way interaction model"
+  )
+
+ggsave(
+  filename = "model5_residual_plot.png",
+  plot = plot5,
+  width = 6, height = 4, dpi = 300
+)
+
+
+plot1
+plot2
+plot3
+plot4
+plot5
+
+
+
+```
+
+
+```{r}
+
+library(broom)
+library(dplyr)
+
+model_best <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age, data = salariesAndTotals2021)
+
+significant_coefs <- tidy(model_best) %>%
+  filter(p.value < 0.05) %>%
+  arrange(p.value)
+
+head(significant_coefs, 100)
+
+```
