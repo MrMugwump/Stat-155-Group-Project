@@ -6,9 +6,11 @@ format: html
 ```{r}
 library(readr)
 library(dplyr)
-playerPPstats2021 = read_csv("player-per-possession-stats-2021-22.txt")
-playerTotals2021 = read_csv("player-total-stats-2021-22.txt")
-playerSalaries = read_csv("NBA Salaries(1990-2023).csv")
+library(ggplot2)
+library(coro)
+library(partitions)
+playerTotals2021 = read_csv("player-total-stats-2021-22.txt") # Taken from https://www.basketball-reference.com/leagues/NBA_2022_totals.html 
+playerSalaries = read_csv("NBA Salaries(1990-2023).csv") # Taken from https://www.kaggle.com/datasets/loganlauton/nba-players-and-team-data/data
 ```
 ## Combining Data Sets: Written by Ben
 
