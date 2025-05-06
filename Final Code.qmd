@@ -1,0 +1,191 @@
+---
+title: "Final Code file"
+format: html
+---
+
+```{r}
+library(readr)
+library(dplyr)
+playerPPstats2021 = read_csv("player-per-possession-stats-2021-22.txt")
+playerTotals2021 = read_csv("player-total-stats-2021-22.txt")
+playerSalaries = read_csv("NBA Salaries(1990-2023).csv")
+```
+## Combining Data Sets: Written by Ben
+
+```{r}
+# Gets rid of duplicated player names and merges data sets
+playerSalaries2021 = filter(playerSalaries, seasonStartYear==2021)
+playerSalaries2021 = playerSalaries2021 %>% rename(Player=playerName)
+
+repeated_names <- playerTotals2021$Player[duplicated(playerTotals2021$Player)]
+
+noRepeats <- playerTotals2021[!playerTotals2021$Player %in% repeated_names, ]
+
+salariesAndTotals2021 = distinct(merge(playerSalaries2021,noRepeats,by=c("Player")))
+write.csv(salariesAndTotals2021,"salariesAndTotals2021.csv")
+```
+
+
+```{r}
+# Removes the dollar sign from salaries
+salariesAndTotals2021$salary = gsub("\\$|,","",salariesAndTotals2021$salary) 
+salariesAndTotals2021$inflationAdjSalary = gsub("\\$|,","",salariesAndTotals2021$inflationAdjSalary)
+
+write.csv(salariesAndTotals2021,"salariesAndTotals2021.csv")
+```
+
+## Getting summary statistics for all variables: Written by Ben
+
+```{r}
+variables = c("PTS","TRB","AST","STL", "BLK", "eFG%", "Age","salary")
+
+salariesAndTotals2021 %>% summarize(across(variables,~mean(.x,na.rm=TRUE)))
+
+salariesAndTotals2021 %>% summarize(across(variables,~sd(.x,na.rm=TRUE)))
+
+salariesAndTotals2021 %>% group_by(Pos)%>% summarise(n()/nrow(.))
+```
+
+
+## Functions for our algorithm: Written by Ben
+
+Here is how the algorithm is going to work: 
+- For every subset of our variables do:
+    - Find all integer partitions for the length of that subset, for each partition do:
+        - For each way to partition our subset into sets of according to the current partition, run a regression multiplying all the values within a set, and adding all the sets together
+```{r}
+appendSubsets = function(parentSet,currSets,setSize){ # Tacks on all possible options for the next set in our partition.
+  sets = cbind()
+  for (i in 1:length(currSets[1,])){
+    subset = currSets[,i]
+    remainingSet = setdiff(parentSet,subset)
+    remainingSetCombos  = combn(remainingSet,setSize,simplify = TRUE)
+    for (j in 1:length(remainingSetCombos[1,])){
+      newSubset = remainingSetCombos[,j]
+      sets = cbind(sets,append(subset,newSubset))
+    }
+  }
+  return(sets)
+}
+
+getPartitions = function(originalSet, partition){ # This actually partitions our current subset
+  sets = combn(originalSet,partition[1],simplify=TRUE)
+  #print(sets)
+  if(length(partition)==1){
+    return(cbind(sets))
+  }
+  for (i in 2:length(partition)){
+    if(partition[i]==0){
+      return(sets)
+    }
+    if(partition[i]==1){ # makes it not make duplicates for specifically the 1s left over.
+      newSets = cbind()
+      for (j in 1:length(sets[1,])){
+        newSets = cbind(newSets,append(sets[,j],setdiff(originalSet,sets[,j])))
+      }
+      return(newSets)
+    }
+    sets = appendSubsets(originalSet,sets,partition[i])
+    
+    #print(sets)
+  }
+  return(sets)
+}
+
+turnIntoStrings = function(headerString,partition, setPartitions){ # Turns our partitions from getPartitions into formulas to use in regression
+  strings = cbind()
+  for (i in 1:length(setPartitions[1,])){
+    currString = ""
+    currPartition = setPartitions[,i]
+    index = 1
+    for (j in partition){
+      if(j!=0){
+        concatenatedSubset = paste(currPartition[index:(index+j-1)],collapse = "*")
+        if (currString==""){
+          currString = paste(c(headerString,concatenatedSubset),collapse="")
+        }
+        else{
+          currString = paste(c(currString,concatenatedSubset),collapse="+")
+        }
+        index=index+j
+      }
+    }
+    strings = cbind(strings,currString)
+  }
+  return(strings)
+}
+```
+
+
+## Running the regressions: Written by Umair and Ben
+```{r}
+currSet = c("PTS","TRB","AST","STL", "BLK", "`eFG%`", "Pos", "Age")
+
+all_combinations <- unlist( # Generates every subset of currSet
+  lapply(1:length(currSet), function(m) {
+    combn(currSet, m, simplify = FALSE)
+  }),
+  recursive = FALSE
+)
+
+# Create a dataframe to store the model formulas and their adjusted R squared values
+modelEvals <- data.frame(
+  formulaString = character(),  # store formula strings
+  adj_r2 = numeric(),# store adjusted R-squared values
+  stringsAsFactors = FALSE
+)
+
+for (combo in all_combinations){ # combo is a subset of currSet
+  #print(combo)
+  partitions=parts(length(combo)) # Gets all the partitions for the current subset
+  
+  for (i in 1:length(partitions[1,])){ # For each partition, get all possible ways to partition our subset into sets of corresponding sizes
+    prt = partitions[,i]
+    partitionedSets = getPartitions(combo,prt) 
+    formulas = turnIntoStrings("salary~",prt,partitionedSets) 
+    
+    for (frmla in formulas){ # for each partitioning of our subset, run a regression and store the formula and adjusted R-squared values
+      model = lm(as.formula(frmla),data = salariesAndTotals2021)
+      adj_r2= summary(model)$adj.r.squared
+      modelEvals = rbind(modelEvals, data.frame(formulaString = frmla, adj_r2 = adj_r2)) # Stores the formula and the R squared value
+    }
+  }
+}
+
+write.csv(modelEvals,"modelEvals.csv")
+```
+
+## Creating visualizations: Written by Umair and Ben
+
+```{r}
+topModels = modelEvals %>% arrange(desc(adj_r2))
+head(topModels)
+titles = c("Best model: All but eFG% multiplied","2nd best model: All but eFG% multiplied, with eFG% added on","3rd best model: All but Steals multiplied","4th best model: All but Steals multiplied, with Steals added on","5th best model: All but Rebounds multiplied, with Rebounds added on")
+
+for (i in 1:5) {
+    model <- lm(as.formula(topModels[i,1]),data=salariesAndTotals2021)
+  
+    plot <- ggplot(model, aes(x = .fitted, y = .resid)) + 
+      geom_point() + 
+      geom_hline(yintercept = 0) +
+      geom_smooth(se = FALSE) +
+      labs(x = "Fitted", y = "Residual", title = titles[i])
+    
+    print(plot)
+}
+```
+
+##Grabbing most important coefficients: Written by Umair
+```{r}
+library(broom)
+library(dplyr)
+
+model_best <- lm(salary ~ PTS*TRB*AST*STL*BLK*Pos*Age, data = salariesAndTotals2021)
+
+significant_coefs <- tidy(model_best) %>%
+  filter(p.value < 0.05) %>%
+  arrange(p.value)
+
+head(significant_coefs, 100)
+```
+
